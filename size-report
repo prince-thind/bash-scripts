@@ -1,0 +1,39 @@
+#!/bin/bash
+
+input=$1;
+if [[ -z $input ]]; then
+	input="./";
+fi
+
+declare -A sizes;
+declare -A numbers;
+
+while read fileName; do
+	fileBaseName="$(basename "$fileName")"
+	fileExtension="${fileBaseName##*.}"
+
+	numbers["$fileExtension"]=$((${numbers["$fileExtension"]}+1))
+
+	size=$(du -B 1 "$fileName"|cut -f 1)
+	sizes["$fileExtension"]=$((${sizes["$fileExtension"]}+$size))
+done < <(find "$input" -type f );
+
+function unsortedResults {
+	for extension in ${!sizes[@]}
+	do
+		totalSize=${sizes[$extension]};
+		totalFiles=${numbers[$extension]}
+		echo "$extension,$totalFiles,$totalSize ";
+	done;
+}
+
+function csvPrint {
+	echo 'File Extension$Total Number of Files$Size';
+	unsortedResults|sort -t "," -nrk 3 | while IFS="," read extension totalFiles totalSize; do
+	hsize=$(numfmt --to=iec $totalSize);
+	echo "$extension,$totalFiles,$hsize ";
+done;
+}
+
+
+csvPrint
