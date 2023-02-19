@@ -8,7 +8,7 @@ fi
 declare -A sizes;
 declare -A numbers;
 
-while read fileName; do
+while IFS= read -r -d $'\0' fileName; do
 	fileBaseName="$(basename "$fileName")"
 	fileExtension="${fileBaseName##*.}"
 
@@ -16,19 +16,19 @@ while read fileName; do
 
 	size=$(du -B 1 "$fileName"|cut -f 1)
 	sizes["$fileExtension"]=$((${sizes["$fileExtension"]}+$size))
-done < <(find "$input" -type f );
+done < <(find "$input" -type f -print0 );
 
 function unsortedResults {
-	for extension in ${!sizes[@]}
+	for extension in "${!sizes[@]}"
 	do
-		totalSize=${sizes[$extension]};
-		totalFiles=${numbers[$extension]}
-		echo "$extension,$totalFiles,$totalSize ";
+		totalSize="${sizes["$extension"]}";
+		totalFiles="${numbers["$extension"]}"
+		echo "$extension,$totalFiles,$totalSize";
 	done;
 }
 
 function csvPrint {
-	echo 'File Extension$Total Number of Files$Size';
+	echo 'File Extension,Total Number of Files,Size';
 	unsortedResults|sort -t "," -nrk 3 | while IFS="," read extension totalFiles totalSize; do
 	hsize=$(numfmt --to=iec $totalSize);
 	echo "$extension,$totalFiles,$hsize ";
