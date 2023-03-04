@@ -1,0 +1,15 @@
+#!/bin/bash
+
+extension=$1;
+path=$2;
+
+if [[ -z $path || -z $extension ]]
+then
+    echo "please specify extension and path"
+    exit 1;
+fi;
+
+for vid in *.$extension
+do
+    ffmpeg -i "$vid" -vcodec libx265 -crf 28 "$path"/"$vid";
+done
